@@ -5,7 +5,7 @@ use Apache::Cookie;
 use Storable qw(freeze thaw);
 use URI;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 Maypole->mk_accessors(qw(user session session_id));
 Maypole::Config->mk_accessors(qw(auth login_exception session_exception));
@@ -35,6 +35,10 @@ Simple example of all three security levels:
         }
         return OK;
     }
+
+    [% session %]
+    [% session_id %]
+    [% ticket %]
 
 Another example:
 
@@ -208,7 +212,8 @@ sub restricted {
 =head2 login
 
 This method creates the session hash.
-It also sets C<$r->{template_args}{session_id}>.
+It also sets C<$r->{template_args}{session}> and
+C<$r->{template_args}{session_id}>.
 
 =cut
 
@@ -240,7 +245,8 @@ sub login {
         return 0;
     }
     $r->session_id( $r->{session}->{_session_id} );
-    $r->{template_args}->{session_id} = $r->session_id;
+    $r->{template_args}->{session_id} = $r->{session_id};
+    $r->{template_args}->{session}    = $r->{session};
     $r->_login_cookie
       if ( ( !$session_id && !$cookie_session_id )
         || $session_id ne $cookie_session_id );

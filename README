@@ -23,6 +23,10 @@ SYNOPSIS
             return OK;
         }
 
+        [% session %]
+        [% session_id %]
+        [% ticket %]
+
     Another example:
 
         use Maypole::Application qw(Authentication::Abstract);
@@ -164,7 +168,7 @@ DESCRIPTION
 
   login
     This method creates the session hash. It also sets
-    "$r-"{template_args}{session_id}>.
+    "$r-"{template_args}{session}> and "$r-"{template_args}{session_id}>.
 
   logout
     This method deletes the session hash.
