@@ -1,0 +1,18 @@
+Revision history for Perl extension Maypole::Plugin::Authentication::Abstract.
+
+0.08  Sat Oct 16 22:00:00 2004
+        - Renamed to Maypole::Plugin::Authentication::Abstract
+
+0.07  Sun Sep 26 00:00:00 2004
+        - Maypole 2.0 support
+
+0.06  Thu Aug 31 23:30:00 2004
+        - fixed cookie handling
+
+0.05  Sun Aug 29 16:00:00 2004
+        - some bugfixes
+        - global session handling
+
+0.04  Thu Aug 12 09:30:00 2004
+
+	- initial release

@@ -1,0 +1,194 @@
+NAME
+    Maypole::Plugin::Authentication::Abstract - Abstract Authentication for
+    Maypole
+
+SYNOPSIS
+    Simple example of all three security levels:
+
+        use Maypole::Application qw(Authentication::Abstract);
+
+        sub authenticate {
+            my $r = shift;
+            if ( $r->table eq 'openforall' ) {
+                $r->public;
+            }
+            elsif ( $r->table eq 'membersonly' ) {
+                $r->private;
+                $r->template('login') unless $r->user;
+            }
+            elsif ( $r->table eq 'topsecret' ) {
+                $r->restricted;
+                $r->template('login') unless $r->user;
+            }
+        }
+
+    Another example:
+
+        use Maypole::Application qw(Authentication::Abstract);
+
+        MyApp->config->auth(
+            user_class    => 'MyApp::Customer',
+            user_field    => 'email',
+            session_class => 'Apache::Session::Postgres',
+            session_args  => {
+                DataSource => 'dbi:Pg:dbname=myapp',
+                UserName   => 'postgres',
+                Password   => '',
+                Commit     => 1
+            }
+        );
+
+        sub authenticate {
+            my $r = shift;
+            if ( $r->table eq 'products' && $r->action eq 'list' ) {
+                $r->public;
+            }
+            elsif ( $r->table eq 'products' && $r->action eq 'search' ) {
+                $r->private;
+                $r->template('login') unless $r->user;
+            }
+            elsif ( $r->table eq 'products' && $r->action eq 'edit' ) {
+                $r->restricted;
+                $r->template('login') unless $r->user;
+            }
+        }
+
+    With exceptions:
+
+        use Maypole::Application qw(Authentication::Abstract);
+        use Exception::Class
+          LoginException   => { description => 'Login failed' },
+          SessionException => { description => 'Session initialization failed' };
+
+        MyApp->config->login_exception('LoginException');
+        MyApp->config->session_exception('SessionException');
+
+        sub authenticate {
+            my $r = shift;
+            if ( $r->table eq 'openforall' ) {
+                $r->public;
+            }
+            elsif ( $r->table eq 'membersonly' ) {
+                $r->private;
+                $r->template('login') unless $r->user;
+            }
+            elsif ( $r->table eq 'topsecret' ) {
+                $r->restricted;
+                $r->template('login') unless $r->user;
+            }
+        }
+
+        sub exception {
+            my ( $r, $e ) = @_;
+            if ( $e->isa('LoginException') ) {
+                warn "Login failed: $e";
+                # Do something to correct the failure
+                return OK;
+            }
+            elsif ( $e->isa('SessionException') ) {
+                warn "Session initialization failed: $e";
+                # Do something to correct the failure
+                return OK;
+            }
+            return ERROR;
+        }
+
+    Tickets in templates
+
+        <INPUT TYPE="hidden" NAME="ticket" VALUE="[% ticket %]">
+
+    Global session handling is also possible:
+
+        sub authenticate {
+            my $r = shift;
+            $r->public;
+            if ( $r->table eq 'products' && $r->action eq 'search' ) {
+                $r->private;
+                $r->template('login') unless $r->user;
+            }
+            elsif ( $r->table eq 'products' && $r->action eq 'edit' ) {
+                $r->restricted;
+                $r->template('login') unless $r->user;
+            }
+        }
+
+DESCRIPTION
+    This module is based on Maypole::Authentication::UserSessionCookie but
+    adds some more advanced features.
+
+    Note that you need Maypole 2.0 or newer to use this module.
+
+    For example we have three levels of security:
+
+            Public: No authentication, only session management
+           Private: Authenticate once, go everywhere
+        Restricted: Authenticate and reauthorize with a ticket for every
+                    request (best used in a post form as hidden input)
+
+    The configuration works similar to
+    Maypole::Authentication::UserSessionCookie but with some little
+    additions.
+
+        $r->{session_id} can be used from parse_path() for example,
+        useful if the user has cookies disabled.
+
+    We provide a number of methods to be inherited by a Maypole class. The
+    three methods "public", "private" and "restricted" determine the
+    security level.
+
+  public
+        $r->public;
+
+    "public" checks for a session cookie and looks into the "session_id"
+    slot of the Maypole request and then populates the resulting session
+    hash to the "session" slot.
+
+  private
+        $r->private;
+
+    "private" does the same as public but also calls "check_credentials" if
+    you haven't authorized before. If the login was successful it populates
+    a "User" object to the "user" slot of the Maypole object.
+
+  restricted
+        $r->restricted;
+
+    "restricted" does the same as "private" but also calls "ticket".
+
+  login
+    This method creates the session hash. It also sets
+    "$r-"{template_args}{session_id}>.
+
+  logout
+    This method deletes the session hash.
+
+  check_credentials
+    This method checks for two form parameters (typically "user" and
+    "password" but configurable) and does a "search" on the user class for
+    those values. If the credentials are wrong, then
+    "$r-"{template_args}{login_error}> is set to an error string.
+
+  uid_to_user
+    This method returns the result of a "retrieve" on the UID from the user
+    class.
+
+  ticket
+    This method checks for a form parameter, "ticket" and reauthorizes the
+    user whenever it is called. By default the ticket is just a serialized
+    array represented as hex string containing the user and the password,
+    but it is very simple to overload "ticket" with a better method. Use a
+    Crypt:: module or even Kerberos! It also sets
+    $r->{template_args}{ticket}.
+
+TODO
+    Better documentation.
+
+AUTHOR
+    Sebastian Riedel, "sri@cpan.org"
+
+COPYRIGHT
+    Copyright 2004 Sebastian Riedel. All rights reserved.
+
+    This program is free software, you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
