@@ -20,6 +20,7 @@ SYNOPSIS
                 $r->restricted;
                 $r->template('login') unless $r->user;
             }
+            return OK;
         }
 
     Another example:
@@ -51,6 +52,7 @@ SYNOPSIS
                 $r->restricted;
                 $r->template('login') unless $r->user;
             }
+            return OK;
         }
 
     With exceptions:
@@ -67,15 +69,19 @@ SYNOPSIS
             my $r = shift;
             if ( $r->table eq 'openforall' ) {
                 $r->public;
+                return OK;
             }
             elsif ( $r->table eq 'membersonly' ) {
                 $r->private;
                 $r->template('login') unless $r->user;
+                return OK;
             }
             elsif ( $r->table eq 'topsecret' ) {
                 $r->restricted;
                 $r->template('login') unless $r->user;
+                return OK;
             }
+            return DECLINED;
         }
 
         sub exception {
@@ -110,6 +116,7 @@ SYNOPSIS
                 $r->restricted;
                 $r->template('login') unless $r->user;
             }
+            return OK;
         }
 
 DESCRIPTION

@@ -5,7 +5,7 @@ use Apache::Cookie;
 use Storable qw(freeze thaw);
 use URI;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 Maypole->mk_accessors(qw(user session session_id));
 Maypole::Config->mk_accessors(qw(auth login_exception session_exception));
@@ -33,6 +33,7 @@ Simple example of all three security levels:
             $r->restricted;
             $r->template('login') unless $r->user;
         }
+        return OK;
     }
 
 Another example:
@@ -64,6 +65,7 @@ Another example:
             $r->restricted;
             $r->template('login') unless $r->user;
         }
+        return OK;
     }
 
 With exceptions:
@@ -80,15 +82,19 @@ With exceptions:
         my $r = shift;
         if ( $r->table eq 'openforall' ) {
             $r->public;
+            return OK;
         }
         elsif ( $r->table eq 'membersonly' ) {
             $r->private;
             $r->template('login') unless $r->user;
+            return OK;
         }
         elsif ( $r->table eq 'topsecret' ) {
             $r->restricted;
             $r->template('login') unless $r->user;
+            return OK;
         }
+        return DECLINED;
     }
 
     sub exception {
@@ -123,6 +129,7 @@ Global session handling is also possible:
             $r->restricted;
             $r->template('login') unless $r->user;
         }
+        return OK;
     }
 
 =head1 DESCRIPTION
